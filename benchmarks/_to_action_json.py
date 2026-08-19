@@ -1,17 +1,17 @@
 """Convert a bench_<tag>.json payload into github-action-benchmark's
 ``customBiggerIsBetter`` format (a flat list of {name, unit, value}).
 
-Reuses the existing runner output (benchmarks/_bench_runner.py); we only pull a
+Reuses the comparison workload output; we only pull a
 few headline warp_cache metrics, each tagged with the env so every matrix cell
 becomes its own trend series.
 
 Usage:
-    python _to_action_json.py <bench_results.json> <out.json> --tag ubuntu-py3.13
-    python _to_action_json.py --selftest
+    benchmarks/run.sh action-json <bench_results.json> <out.json> --tag ubuntu-py3.13
 """
 
 import argparse
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -27,8 +27,8 @@ def convert(payload: dict, tag: str) -> list[dict]:
     out = []
     for section, key, label in METRICS:
         value = payload.get(section, {}).get(key, {}).get("warp_cache")
-        if value is None:
-            continue  # impl/section absent in this run; skip rather than emit junk
+        if not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
+            raise ValueError(f"missing or invalid required metric: {section}.{key}.warp_cache")
         out.append({"name": f"warp_cache {label} [{tag}]", "unit": "ops/s", "value": round(value)})
     return out
 
@@ -41,7 +41,12 @@ def _selftest() -> None:
     out = convert(sample, "x-pyY")
     assert [m["value"] for m in out] == [1000, 500], out
     assert all(m["unit"] == "ops/s" and "x-pyY" in m["name"] for m in out), out
-    assert convert({}, "t") == []  # missing data -> empty, not a crash
+    try:
+        convert({}, "t")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("missing required metrics must fail")
     print("selftest ok")
 
 

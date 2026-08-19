@@ -96,7 +96,7 @@ For comparison, the previous LRU-based shared backend did 3.1M ops/s at 4 proces
 
 SIEVE also gets better hit rates than LRU across all workload patterns we tested. These benchmarks compare `warp_cache` (SIEVE) against `functools.lru_cache` (LRU) using 1M requests with Zipf-distributed keys.
 
-Run them yourself: `make bench-sieve` or `python benchmarks/bench_sieve.py --quick`.
+Run them yourself: `benchmarks/run.sh sieve --quick`.
 
 ### Hit ratio vs cache size
 
@@ -147,7 +147,7 @@ Three phases: Zipf over keys 0-999, then keys 1000-1999 (completely new set), th
 | Phase 2 (keys 1000-1999) | 75.6% | 69.9% |
 | Phase 3 (return to 0-999) | 75.5% | 69.6% |
 
-*Benchmarks: `benchmarks/bench_sieve.py`, 1M ops, Zipf-distributed keys, seed=42.*
+*Benchmarks: `benchmarks/run.sh sieve`, 1M ops, Zipf-distributed keys, seed=42.*
 
 ## Where the remaining gap lives
 
@@ -202,9 +202,10 @@ Under free-threaded Python (no GIL):
 - **lru_cache**: needs a real lock without the GIL's implicit protection, gets slower
 - **Trade-off**: atomic refcounting adds ~2-5ns to single-threaded cost
 
-The benchmark runner (`benchmarks/_bench_runner.py`) automatically creates
-temporary uv venvs for each Python version, builds warp_cache via maturin, and
-runs all benchmarks.
+Use `benchmarks/run.sh smoke` for a bounded native check, `compare` for the full
+comparison, or `matrix` to create temporary uv environments and build each
+requested Python version. `docker` is an optional reproducible Linux environment;
+native runs remain the source for performance measurements.
 
 ## Optimization Journey
 

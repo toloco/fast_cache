@@ -6,10 +6,9 @@ scan resistance, one-hit-wonder filtering, working set adaptivity,
 and hit ratio across varying cache sizes and skewness.
 
 Usage:
-    python benchmarks/bench_sieve.py                     # full suite, 1M requests
-    python benchmarks/bench_sieve.py --quick              # 100K requests
-    python benchmarks/bench_sieve.py --bench scan,ohw     # specific benchmarks
-    python benchmarks/bench_sieve.py --seed 99            # custom seed
+    benchmarks/run.sh sieve
+    benchmarks/run.sh sieve --quick
+    benchmarks/run.sh sieve --bench scan,ohw
 """
 
 import argparse
@@ -22,8 +21,7 @@ from pathlib import Path
 
 from warp_cache import cache
 
-RESULTS_DIR = Path(__file__).resolve().parent / "results"
-RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+DEFAULT_RESULTS_DIR = Path(__file__).resolve().parents[1] / "results"
 
 ALL_BENCHMARKS = ["hitratio", "zipf", "scan", "ohw", "shift", "throughput"]
 
@@ -499,6 +497,7 @@ BENCH_DISPATCH = {
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="SIEVE eviction quality benchmark")
+    parser.add_argument("--output-dir", type=Path, default=DEFAULT_RESULTS_DIR)
     parser.add_argument("--quick", action="store_true", help="Use 100K requests instead of 1M")
     parser.add_argument(
         "--bench",
@@ -529,7 +528,8 @@ def main() -> None:
         print(f"\n[{i}/{len(selected)}] {title}")
         all_results[name] = bench_fn(n_ops, seed)
 
-    json_path = RESULTS_DIR / "bench_sieve.json"
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = args.output_dir / "bench_sieve.json"
     json_path.write_text(json.dumps(all_results, indent=2))
     print(f"\nResults saved to {json_path}")
 

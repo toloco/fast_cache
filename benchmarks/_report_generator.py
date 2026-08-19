@@ -2,17 +2,15 @@
 """Generate a Markdown benchmark report from JSON result files.
 
 Usage:
-    python benchmarks/_report_generator.py
-    python benchmarks/_report_generator.py --tags py3.12,py3.13,py3.13t
+    benchmarks/run.sh report benchmarks/results/bench_py3.12.json
 """
 
 import argparse
 import json
 import platform
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
-RESULTS_DIR = Path(__file__).resolve().parent / "results"
 REPORT_PATH = Path(__file__).resolve().parent / "BENCHMARK_REPORT.md"
 
 
@@ -24,19 +22,11 @@ def _fmt_ops(ops: float) -> str:
     return f"{ops:.0f}"
 
 
-def _load_results(tags: list[str] | None) -> dict[str, dict]:
+def _load_results(paths: list[Path]) -> dict[str, dict]:
     data: dict[str, dict] = {}
-    if tags:
-        for tag in tags:
-            p = RESULTS_DIR / f"bench_{tag}.json"
-            if p.exists():
-                data[tag] = json.loads(p.read_text())
-            else:
-                print(f"Warning: {p} not found, skipping")
-    else:
-        for p in sorted(RESULTS_DIR.glob("bench_*.json")):
-            tag = p.stem.removeprefix("bench_")
-            data[tag] = json.loads(p.read_text())
+    for path in paths:
+        tag = path.stem.removeprefix("bench_")
+        data[tag] = json.loads(path.read_text())
     return data
 
 
@@ -53,7 +43,7 @@ def generate_report(data: dict[str, dict]) -> str:
     sections: list[str] = []
 
     # Header
-    now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     sections.append("# warp_cache Benchmark Report\n")
     sections.append(f"Generated: {now}  ")
     sections.append(f"Machine: {platform.machine()} / {platform.system()} {platform.release()}  ")
@@ -272,24 +262,19 @@ def generate_report(data: dict[str, dict]) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate benchmark report")
-    parser.add_argument(
-        "--tags",
-        type=str,
-        default=None,
-        help="Comma-separated list of tags to include (default: all bench_*.json files)",
-    )
+    parser.add_argument("inputs", nargs="+", type=Path, help="result JSON files to include")
+    parser.add_argument("--output", type=Path, default=REPORT_PATH)
     args = parser.parse_args()
 
-    tags = [t.strip() for t in args.tags.split(",")] if args.tags else None
-    data = _load_results(tags)
+    data = _load_results(args.inputs)
 
     if not data:
-        print("No benchmark results found.")
-        return
+        parser.error("no benchmark results found")
 
     report = generate_report(data)
-    REPORT_PATH.write_text(report)
-    print(f"Report written to {REPORT_PATH}")
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(report)
+    print(f"Report written to {args.output}")
     print(f"  Datasets: {list(data.keys())}")
 
 

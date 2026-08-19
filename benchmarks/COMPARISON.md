@@ -255,7 +255,7 @@ Python: fn(42)
 
 **Source data:** `benchmarks/results/bench_default.json`
 
-**Benchmark runner:** `benchmarks/_bench_runner.py`
+**Benchmark runner:** `benchmarks/run.sh compare`
 
 ---
 

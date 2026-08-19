@@ -36,6 +36,10 @@ make test         # Build + run all tests
 - **`tests/`** - pytest test suite
 - **`benchmarks/`** - Performance benchmarks
 
+All benchmark workflows use `benchmarks/run.sh`. Start with
+`benchmarks/run.sh smoke`; run `benchmarks/run.sh --help` for comparison,
+matrix, SIEVE, reporting, action JSON, and optional Docker commands.
+
 ### Code Style
 
 - **Python**: Formatted and linted with [ruff](https://docs.astral.sh/ruff/) (line length 100)
