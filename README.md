@@ -75,7 +75,7 @@ Why not the others:
 - **ARC** - two lists + ghost entries, much more complex for small gains
 - **TinyLFU** - frequency counting overhead, bloom filter maintenance
 
-The hit rate is also better than LRU. Measured with Zipf-distributed keys (1M requests, `benchmarks/bench_sieve.py`):
+The hit rate is also better than LRU. Measured with Zipf-distributed keys (1M requests, `benchmarks/run.sh sieve`):
 
 | Workload | SIEVE | LRU | Miss Reduction |
 |---|---:|---:|---:|

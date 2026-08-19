@@ -57,11 +57,11 @@ jobs:
       - name: Build extension
         run: uv run maturin develop --release
       - name: Run benchmarks (quick)
-        # --warp-only: the trend dashboard charts only warp_cache, and a competitor
-        # lib that hangs (cachebox infinite-loops on 3.10/3.11) would stall the job.
-        run: uv run python benchmarks/_bench_runner.py --tag "$TAG" --quick --warp-only
+        # Smoke charts only warp_cache; competitor availability must not make the
+        # trend job hang or silently change the measured series.
+        run: BENCH_TAG="$TAG" uv run benchmarks/run.sh smoke
       - name: Convert to action format
-        run: uv run python benchmarks/_to_action_json.py "benchmarks/results/bench_$TAG.json" "bench-action-$TAG.json" --tag "$TAG"
+        run: uv run benchmarks/run.sh action-json "benchmarks/results/bench_$TAG.json" "bench-action-$TAG.json" --tag "$TAG"
       - uses: actions/upload-artifact@v4
         with:
           name: bench-action-${{ matrix.os }}-py${{ matrix.python-version }}

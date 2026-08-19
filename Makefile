@@ -63,19 +63,19 @@ test-only: ## Run tests without rebuilding
 
 # ── Benchmark ────────────────────────────────────────────────────────────────
 bench: build ## Run benchmarks for current Python
-	uv run $(UV_PYTHON) python benchmarks/_bench_runner.py --tag default
+	uv run $(UV_PYTHON) benchmarks/run.sh compare
 
-bench-quick: build ## Quick benchmarks (skip sustained/TTL)
-	uv run $(UV_PYTHON) python benchmarks/_bench_runner.py --tag default --quick
+bench-quick: build ## Bounded warp_cache-only smoke benchmark
+	uv run $(UV_PYTHON) benchmarks/run.sh smoke
 
-bench-all: ## Run benchmarks across Python versions + generate report
-	bash benchmarks/bench_all.sh
+bench-all: ## Run comparisons across supported Python versions
+	BENCH_PYTHONS="$(SUPPORTED_PYTHONS)" benchmarks/run.sh matrix
 
 bench-sieve: build ## Run SIEVE eviction quality benchmarks
-	uv run $(UV_PYTHON) python benchmarks/bench_sieve.py
+	uv run $(UV_PYTHON) benchmarks/run.sh sieve
 
-bench-report: ## Generate report from existing results
-	uv run python benchmarks/_report_generator.py
+bench-report: ## Generate report (pass FILES="benchmarks/results/bench_x.json ...")
+	uv run benchmarks/run.sh report $(FILES)
 
 # ── Publish ──────────────────────────────────────────────────────────────────
 publish-test: ## Build and upload to TestPyPI

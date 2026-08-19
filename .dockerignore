@@ -1,0 +1,6 @@
+.git
+.venv
+.worktrees
+target
+benchmarks/results
+**/__pycache__
